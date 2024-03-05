@@ -1,0 +1,30 @@
+{
+  "name": "smi-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild src/index.ts --outdir=dist --sourcemap --bundle --minify-whitespace --minify-identifiers --minify-syntax --platform=node --target=node20.10.0",
+    "clean": "rimraf dist",
+    "compile": "tsc",
+    "compile-watch": "tsc -w",
+    "dev": "nodemon --watch src/* ts,json --exec 'pnpm build && pnpm start'",
+    "format": "prettier . --write",
+    "format-check": "prettier . --check",
+    "start": "node --enable-source-maps ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@types/nodemon": "^1.19.6"
+  },
+  "dependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "esbuild": "^0.20.1",
+    "nodemon": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  }
+}

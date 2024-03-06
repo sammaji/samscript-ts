@@ -27,7 +27,7 @@ public class GenerateAst {
         String cwd = Paths.get("").toAbsolutePath().toString();
         String path = Path.of(cwd, "src", filename).toString();
         PrintWriter writer = new PrintWriter(path, "UTF-8");
-        writer.println("import { Token } from \"@/scanner\";");
+        writer.println("import { type Token } from \"@/lex\";");
         writer.println();
         writer.printf("export class %s {};", basename);
         writer.println();

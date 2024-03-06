@@ -1,23 +1,23 @@
 import { BinaryExpr,UnaryExpr, LiteralExpr, Expr, GroupingExpr } from "./expr";
 
 class AstPrinter {
-	static print(expr: Expr): string {
+	static prettify(expr: Expr): string {
         if (expr instanceof BinaryExpr) {
-            const left = this.print(expr.left);
-            const right = this.print(expr.right);
+            const left = this.prettify(expr.left);
+            const right = this.prettify(expr.right);
             return this.parenthesize(`${expr.operator.lexeme} ${left} ${right}`)
         }
         else if (expr instanceof GroupingExpr) {
-            return this.print(expr)
+            return this.prettify(expr.expr)
         }
         else if (expr instanceof UnaryExpr) {
-            const right = this.print(expr.right);
+            const right = this.prettify(expr.right);
             return this.parenthesize(`${expr.operator.lexeme} ${right}`)
         }
         else if (expr instanceof LiteralExpr) {
             return `${expr.value}`
         }
-        else return ""
+        else throw new Error("Invalid Expr")
     }
 
     private static parenthesize(text: string) {

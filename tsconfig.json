@@ -15,7 +15,8 @@
       "resolveJsonModule": true,
       "paths": {
         "@/*": ["./src/*"]
-      }
+      },
+      "esModuleInterop": true
     },
     "include": ["src"],
     "exclude": ["dist", "bundle", "node_modules"],

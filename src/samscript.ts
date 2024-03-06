@@ -1,52 +1,55 @@
 import path from "path";
 import fs from "node:fs"
+import readline from "readline";
 import { type Token, TokenType, Scanner } from "@/lex";
-import Parser from "./parser";
-import AstPrinter from "./pretty-printer";
+import { Parser } from "@/parser";
+import { AstPrinter } from "@/parser";
+import { Interpreter } from "./interpreter";
 
-class Smi {
+class Samscript {
     static hadError = false;
+    static hadRuntimeError = false;
+    static interpreter = new Interpreter()
 
     static printUsage() {
-        console.log("Usage: smi [file]");
+        console.log("Usage: samscript [file]");
     }
 
     static runRepl() {
-        console.log('running repl...')
-        // InputStreamReader reader = new InputStreamReader(System.in);
-        // BufferedReader buffer = new BufferedReader(reader);
+        console.log("Samscript REPL. Type :q to exit.")
+        const inf = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
 
-        // for(;;) {
-        //     System.out.print("> ");
-        //     String line = buffer.readLine();
-        //     if (line == null || line.equals(":q")) {
-        //         break;
-        //     }
-        //     System.out.println(line);
-        //     run(line);
+        const readlines = (inf: readline.Interface) => {
+            inf.question("> ", (line: string|null) => {
+                if (line === null || line === ":q") {
+                    process.exit()
+                }
+                this.run(line)
+                this.hadError = false
+                this.hadRuntimeError = false;
+                readlines(inf)
+            })
+        }
 
-        //     hadError = false;
-        // }
+        readlines(inf)
     }
 
     static runFile(filepath: string) {
         const fullPath = path.join(process.cwd(), filepath)
         if (fs.existsSync(fullPath)) {
             const source = fs.readFileSync(fullPath).toString();
-            Smi.run(source)
+            this.run(source)
         }
-
         if (this.hadError) process.exit(65);
+        if (this.hadRuntimeError) process.exit(70);
     }
 
     static run(source: string) {
         const sc = new Scanner(source);
         const tokens = sc.scanTokens();
-        // console.table(tokens.map(token => {
-        //     const { type, ...rest } = token
-        //     return { type: TokenType[type], ...rest }
-        // }))
-
         const parser = new Parser(tokens)
         const ast = parser.parse()
 
@@ -54,13 +57,11 @@ class Smi {
             console.log("can't produce ast")
             return
         }
-
-        console.log("Here's your ast:")
-        console.log(AstPrinter.print(ast))
+        this.interpreter.interpret(ast)
     }
 
     static errorAtLine(line: number, message: string) {
-        Smi.report(line, "", message);
+        this.report(line, "", message);
     }
 
     static error(token: Token, message: string) {
@@ -76,4 +77,4 @@ class Smi {
     }
 }
 
-export default Smi
+export default Samscript

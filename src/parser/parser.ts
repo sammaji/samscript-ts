@@ -1,6 +1,6 @@
 import { type Token, TokenType } from "@/lex";
 import { BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr } from "./expr";
-import Smi from "./smi";
+import Smi from "@/samscript";
 
 export class ParseError extends SyntaxError {}
 

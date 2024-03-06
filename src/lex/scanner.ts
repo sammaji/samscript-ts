@@ -1,5 +1,5 @@
 import keywords from "./keywords";
-import Smi from "@/smi";
+import Smi from "@/samscript";
 import TokenType from "./tokens";
 import { isAlpha, isAlphaNumeric, isDigit } from "@/util";
 

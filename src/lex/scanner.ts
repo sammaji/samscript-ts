@@ -1,9 +1,9 @@
 import keywords from "./keywords";
-import Smi from "./smi";
+import Smi from "@/smi";
 import TokenType from "./tokens";
-import { isAlpha, isAlphaNumeric, isDigit } from "./util";
+import { isAlpha, isAlphaNumeric, isDigit } from "@/util";
 
-type Token = {
+export type Token = {
     type: TokenType,
     lexeme: string,
     literal: any,
@@ -52,7 +52,7 @@ class Scanner {
         }
 
         if (this.isEof()) {
-            Smi.error(this.line, "Unterminated string.")
+            Smi.errorAtLine(this.line, "Unterminated string.")
             return
         }
 
@@ -146,7 +146,7 @@ class Scanner {
             default:
                 if (isDigit(c)) this.number()
                 else if (isAlpha(c)) this.identifier()
-                else Smi.error(this.line, `unexpected token: ${c}`)
+                else Smi.errorAtLine(this.line, `unexpected token: ${c}`)
         }
     }
 }

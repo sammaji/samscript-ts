@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "ast": "java ast/GenerateAst.java expr.ts",
     "build": "esbuild src/index.ts --outdir=dist --sourcemap --bundle --minify-whitespace --minify-identifiers --minify-syntax --platform=node --target=node20.10.0",
     "clean": "rimraf dist",
     "compile": "tsc",

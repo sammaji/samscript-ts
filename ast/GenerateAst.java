@@ -14,10 +14,10 @@ public class GenerateAst {
             System.exit(64);
         }
         defineAst(args[0], "Expr", Arrays.asList(
-                "BinaryExpr -> left: Expr, operator: TokenType, right: Expr",
+                "BinaryExpr -> left: Expr, operator: Token, right: Expr",
                 "GroupingExpr -> expr: Expr",
                 "LiteralExpr -> value: any",
-                "UnaryExpr -> operator: TokenType.NOT | TokenType.MINUS, right: Expr"
+                "UnaryExpr -> operator: Token, right: Expr"
                 ));
     }
 
@@ -27,7 +27,7 @@ public class GenerateAst {
         String cwd = Paths.get("").toAbsolutePath().toString();
         String path = Path.of(cwd, "src", filename).toString();
         PrintWriter writer = new PrintWriter(path, "UTF-8");
-        writer.println("import TokenType from \"@/tokens\";");
+        writer.println("import { Token } from \"@/scanner\";");
         writer.println();
         writer.printf("export class %s {};", basename);
         writer.println();

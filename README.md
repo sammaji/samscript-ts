@@ -116,4 +116,4 @@ while (a > 0) {
 }
 ```
 
-Thank you for reading.
+Thank you for reading ❣️

@@ -16,4 +16,4 @@ export const getNthLine = (text: string, lineNumber: number) => {
       return undefined;
     }  
     return lines[lineNumber - 1];
-  }
+}

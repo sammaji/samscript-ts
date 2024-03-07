@@ -1,6 +1,6 @@
 import { Environment } from "@/environment";
 import { Token, TokenType } from "@/lex";
-import { AssignExpr, BinaryExpr, BlockStmt, Expr, GroupingExpr, LiteralExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr } from "@/parser";
+import { AssignExpr, BinaryExpr, BlockStmt, Expr, ExprStmt, GroupingExpr, LiteralExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr } from "@/parser";
 import { RuntimeError } from "@/error";
 
 class Interpreter {
@@ -23,7 +23,9 @@ class Interpreter {
             case stmt instanceof BlockStmt:
                 this.evaluateBlockStmt(stmt.stmts, new Environment(this.environment))
                 return
-
+            case stmt instanceof ExprStmt:
+                this.evaluate(stmt.expr)
+                return
         }
     }
 
@@ -32,7 +34,7 @@ class Interpreter {
         if (stmt.initializer != null) {
             value = this.evaluate(stmt.initializer)
         }
-        this.environment.define(stmt.name.lexeme, value)
+        this.environment.define(stmt.name, value)
     }
 
     private evaluateBlockStmt(stmts: Stmt[], environment: Environment) {
@@ -49,6 +51,7 @@ class Interpreter {
     }
 
     private evaluate(expr: Expr): any {
+        // console.log(expr)
         switch (true) {
             case expr instanceof GroupingExpr:
                 return this.evaluate(expr.expr)
@@ -76,7 +79,7 @@ class Interpreter {
                 this.isNumberOperand(expr.operator, right)
                 return right * -1
             case TokenType.NOT:
-                return !this.isTruthy(expr.right)
+                return !this.isTruthy(expr.right) // TODO
         }
 
         return null

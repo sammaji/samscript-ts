@@ -26,6 +26,7 @@ public class GenerateAst {
                 "BlockStmt -> stmts: Stmt[]",
                 "ExprStmt -> expr: Expr",
                 "PrintStmt -> expr: Expr",
+                "IfStmt -> condition: Expr, block: Stmt[]",
                 "VarDecl -> name: Token, initializer: Expr|null"
                 ), 
                 Arrays.asList("import { Expr } from \"./expr\""));

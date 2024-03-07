@@ -1,7 +1,7 @@
 import path from "path";
-import fs from "node:fs"
+import fs from "node:fs";
 import readline from "readline";
-import { type Token, TokenType, Scanner } from "@/lex";
+import { Scanner } from "@/lex";
 import { Parser } from "@/parser";
 import { Interpreter } from "./interpreter";
 import { Error, ErrorParser } from "./error";
@@ -9,7 +9,7 @@ import { Error, ErrorParser } from "./error";
 class Samscript {
     static hadError = false;
     static hadRuntimeError = false;
-    static interpreter = new Interpreter()
+    static interpreter = new Interpreter();
 
     static printUsage() {
         console.log("Usage: samscript [file]");

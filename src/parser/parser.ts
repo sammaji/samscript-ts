@@ -1,6 +1,6 @@
 import { type Token, TokenType } from "@/lex";
 import { AssignExpr, BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr } from "./expr";
-import { BlockStmt, ExprStmt, PrintStmt, Stmt, VarDecl } from ".";
+import { BlockStmt, ExprStmt, IfStmt, PrintStmt, Stmt, VarDecl } from ".";
 import { Error, ErrorParser, SyntaxError } from "@/error";
 
 class Parser {
@@ -65,6 +65,7 @@ class Parser {
                 case TokenType.WHILE:
                 case TokenType.PRINT:
                 case TokenType.RETURN:
+                case TokenType.RBRACE:
                     return;
             }
 
@@ -80,12 +81,16 @@ class Parser {
         const expr = this.equality()
         if (this.match(TokenType.EQ)) {
             const equals = this.previous()
-            const value = this.assignment()
+            const value = this.assignment();
+            
             if (expr instanceof VariableExpr) {
-                return new AssignExpr(expr.name, value)
+                const e = new AssignExpr(expr.name, value)
+                // console.log(e)
+                return e
             }
             new SyntaxError("Invalid assignment", equals)
         }
+
         return expr
     }
 
@@ -180,7 +185,7 @@ class Parser {
         const name = this.consume(TokenType.IDENTIFIER, "Expected variable name.")
         let initializer: Expr | null = null;
         if (this.match(TokenType.EQ)) {
-            initializer = this.expression()
+            initializer = this.assignment()
         }
         this.consume(TokenType.SEMI, "Expected ';'");
         return new VarDecl(name, initializer)
@@ -189,6 +194,7 @@ class Parser {
     private statement() {
         if (this.match(TokenType.PRINT)) return this.printStatement()
         if (this.match(TokenType.LBRACE)) return new BlockStmt(this.blockStatement())
+        // if (this.match(TokenType.IF)) return this.ifStatement()
         return this.expressionStatement()
     }
 
@@ -199,9 +205,13 @@ class Parser {
             if (decl) stmts.push(decl)
         }
         this.consume(TokenType.RBRACE, "Expected '}' at the end of block")
-        console.log(this.peek())
         return stmts
     }
+
+    // private ifStatement() {
+    //     this.consume(TokenType.LPAREN, )
+    //     const block: Stmt[] = []
+    // }
 
     private printStatement() {
         const expr = this.expression()
@@ -221,7 +231,6 @@ class Parser {
             const decl = this.declaration()
             if (decl) stmt.push(decl)
         }
-
         return stmt
     }
 }

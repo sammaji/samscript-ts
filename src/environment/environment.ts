@@ -9,8 +9,11 @@ class Environment {
         this.enclosing = enclosing
     }
 
-    define(name: string, value: any) {
-        this.values.set(name, value)
+    define(name: Token, value: any) {
+        if (this.values.has(name.lexeme)) {
+            throw new RuntimeError(`Cannot redeclare variable ${name.lexeme}`, name)
+        }
+        this.values.set(name.lexeme, value)
     }
 
     assign(name: Token, value: any) {

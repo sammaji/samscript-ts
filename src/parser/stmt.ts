@@ -27,6 +27,16 @@ export class PrintStmt extends Stmt {
 	}
 };
 
+export class IfStmt extends Stmt {
+	condition: Expr;
+	block: Stmt[];
+	constructor(condition: Expr, block: Stmt[]) {
+		super();
+		this.condition = condition;
+		this.block = block;
+	}
+};
+
 export class VarDecl extends Stmt {
 	name: Token;
 	initializer: Expr|null;

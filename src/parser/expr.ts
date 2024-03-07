@@ -1,6 +1,16 @@
-import { Token } from "@/lex";
+import { type Token } from "@/lex";
 
 export class Expr {};
+
+export class AssignExpr extends Expr {
+	name: Token;
+	value: Expr;
+	constructor(name: Token, value: Expr) {
+		super();
+		this.name = name;
+		this.value = value;
+	}
+};
 
 export class BinaryExpr extends Expr {
 	left: Expr;
@@ -37,6 +47,14 @@ export class UnaryExpr extends Expr {
 		super();
 		this.operator = operator;
 		this.right = right;
+	}
+};
+
+export class VariableExpr extends Expr {
+	name: Token;
+	constructor(name: Token) {
+		super();
+		this.name = name;
 	}
 };
 

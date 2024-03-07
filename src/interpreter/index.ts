@@ -1,2 +1,2 @@
-import Interpreter, { RuntimeError } from "./interpreter";
-export { Interpreter, RuntimeError }
+import Interpreter from "./interpreter";
+export { Interpreter }

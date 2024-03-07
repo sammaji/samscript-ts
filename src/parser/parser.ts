@@ -1,15 +1,16 @@
 import { type Token, TokenType } from "@/lex";
-import { BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr } from "./expr";
-import Smi from "@/samscript";
-
-export class ParseError extends SyntaxError {}
+import { AssignExpr, BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr } from "./expr";
+import { BlockStmt, ExprStmt, PrintStmt, Stmt, VarDecl } from ".";
+import { Error, ErrorParser, SyntaxError } from "@/error";
 
 class Parser {
     private tokens: Token[]
     private current: number = 0
+    private source?: string
 
-    constructor(tokens: Token[]) {
+    constructor(tokens: Token[], source?: string) {
         this.tokens = tokens
+        this.source = source
     }
 
     private isEof() {
@@ -47,17 +48,12 @@ class Parser {
 
     private consume(type: TokenType, message: string) {
         if (this.check(type)) return this.advance()
-        throw this.error(this.peek(), message)
-    }
-
-    private error(token: Token, message: string) {
-        Smi.errorAtLine(token.line, message)
-        throw new ParseError()
+        throw new SyntaxError(message, this.previous())
     }
 
     private synchronize() {
         this.advance()
-        while (this.isEof()) {
+        while (!this.isEof()) {
             if (this.previous().type === TokenType.SEMI) return
 
             switch (this.peek().type) {
@@ -77,7 +73,20 @@ class Parser {
     }
 
     private expression(): Expr {
-        return this.equality()
+        return this.assignment()
+    }
+
+    private assignment(): Expr {
+        const expr = this.equality()
+        if (this.match(TokenType.EQ)) {
+            const equals = this.previous()
+            const value = this.assignment()
+            if (expr instanceof VariableExpr) {
+                return new AssignExpr(expr.name, value)
+            }
+            new SyntaxError("Invalid assignment", equals)
+        }
+        return expr
     }
 
     private equality(): Expr {
@@ -148,16 +157,72 @@ class Parser {
             this.consume(TokenType.RPAREN, "Expected ')' after expression");
             return new GroupingExpr(expr)
         }
-        throw this.error(this.peek(), "Syntax error.");
+        if (this.match(TokenType.IDENTIFIER)) return new VariableExpr(this.previous())
+        throw new SyntaxError("Syntax error, unexpected token", this.peek())
     }
 
-    parse() {
+    private declaration() {
         try {
-            return this.expression()
+            if (this.match(TokenType.VAR)) return this.varDeclaration()
+            return this.statement()
         }
-        catch (e: any) {
-            return null
+        catch (error) {
+            this.synchronize()
+            if (error instanceof Error) {
+                ErrorParser.parseError(error, this.source)
+                return undefined
+            }
+            throw error
         }
+    }
+
+    private varDeclaration() {
+        const name = this.consume(TokenType.IDENTIFIER, "Expected variable name.")
+        let initializer: Expr | null = null;
+        if (this.match(TokenType.EQ)) {
+            initializer = this.expression()
+        }
+        this.consume(TokenType.SEMI, "Expected ';'");
+        return new VarDecl(name, initializer)
+    }
+
+    private statement() {
+        if (this.match(TokenType.PRINT)) return this.printStatement()
+        if (this.match(TokenType.LBRACE)) return new BlockStmt(this.blockStatement())
+        return this.expressionStatement()
+    }
+
+    private blockStatement() {
+        const stmts: Stmt[] = []
+        while (!this.check(TokenType.RBRACE) && !this.isEof()) {
+            const decl = this.declaration()
+            if (decl) stmts.push(decl)
+        }
+        this.consume(TokenType.RBRACE, "Expected '}' at the end of block")
+        console.log(this.peek())
+        return stmts
+    }
+
+    private printStatement() {
+        const expr = this.expression()
+        this.consume(TokenType.SEMI, "Expected ';'");
+        return new PrintStmt(expr)
+    }
+
+    private expressionStatement() {
+        const expr = this.expression()
+        this.consume(TokenType.SEMI, "Expected ';'");
+        return new ExprStmt(expr)
+    }
+
+    parse(): Stmt[] {
+        let stmt: Stmt[] = []
+        while (!this.isEof()) {
+            const decl = this.declaration()
+            if (decl) stmt.push(decl)
+        }
+
+        return stmt
     }
 }
 

@@ -3,8 +3,8 @@ import fs from "node:fs"
 import readline from "readline";
 import { type Token, TokenType, Scanner } from "@/lex";
 import { Parser } from "@/parser";
-import { AstPrinter } from "@/parser";
 import { Interpreter } from "./interpreter";
+import { Error, ErrorParser } from "./error";
 
 class Samscript {
     static hadError = false;
@@ -50,30 +50,22 @@ class Samscript {
     static run(source: string) {
         const sc = new Scanner(source);
         const tokens = sc.scanTokens();
-        const parser = new Parser(tokens)
-        const ast = parser.parse()
+        const parser = new Parser(tokens, source)
+        let ast;
 
-        if (!ast) {
-            console.log("can't produce ast")
-            return
+        try {
+            ast = parser.parse()
+            this.interpreter.interpret(ast)
         }
-        this.interpreter.interpret(ast)
-    }
-
-    static errorAtLine(line: number, message: string) {
-        this.report(line, "", message);
-    }
-
-    static error(token: Token, message: string) {
-        if (token.type === TokenType.EOF) {
-            this.report(token.line, "at end", message)
-        } else {
-            this.report(token.line, " at '" + token.lexeme + "'", message);
+        catch (error: any) {
+            if (error instanceof Error) {
+                ErrorParser.parseError(error, source)
+            }
+            else {
+                console.error(error)
+            }
         }
-    }
-
-    private static report(line: number, where: string, message: string) {
-        console.log(`[${line} line] ${where}: ${message}`);
+        
     }
 }
 

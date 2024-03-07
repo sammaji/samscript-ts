@@ -1,30 +1,54 @@
+import { Environment } from "@/environment";
 import { Token, TokenType } from "@/lex";
-import { BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr } from "@/parser";
-
-export class RuntimeError extends Error {
-    name: string = "RuntimeError";
-    token: Token;
-    constructor(message: string, token: Token) {
-        super()
-        this.message = message
-        this.token = token
-    }
-}
+import { AssignExpr, BinaryExpr, BlockStmt, Expr, GroupingExpr, LiteralExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr } from "@/parser";
+import { RuntimeError } from "@/error";
 
 class Interpreter {
-    interpret(expr: Expr) {
-        try {
-            const result: any = Interpreter.evaluate(expr);
-            console.log(result)
-        }
-        catch(error: any) {
-            if (error instanceof RuntimeError) {
-                console.error(error.message);
-            }
+    environment = new Environment()
+
+    interpret(stmts: Stmt[]) {
+        for (const stmt of stmts) {
+            this.readStmt(stmt)
         }
     }
 
-    private static evaluate(expr: Expr): any {
+    private readStmt(stmt: Stmt) {
+        switch (true) {
+            case stmt instanceof PrintStmt:
+                console.log(this.stringify(this.evaluate(stmt.expr)))
+                return
+            case stmt instanceof VarDecl:
+                this.evaluateVarDecl(stmt)
+                return
+            case stmt instanceof BlockStmt:
+                this.evaluateBlockStmt(stmt.stmts, new Environment(this.environment))
+                return
+
+        }
+    }
+
+    private evaluateVarDecl(stmt: VarDecl) {
+        let value: any = null
+        if (stmt.initializer != null) {
+            value = this.evaluate(stmt.initializer)
+        }
+        this.environment.define(stmt.name.lexeme, value)
+    }
+
+    private evaluateBlockStmt(stmts: Stmt[], environment: Environment) {
+        const previous = this.environment
+        try {
+            this.environment = environment
+            for (const stmt of stmts) {
+                this.readStmt(stmt)
+            }
+        }
+        finally {
+            this.environment = previous
+        }
+    }
+
+    private evaluate(expr: Expr): any {
         switch (true) {
             case expr instanceof GroupingExpr:
                 return this.evaluate(expr.expr)
@@ -34,12 +58,18 @@ class Interpreter {
                 return this.evaluateBinaryExpr(expr)
             case expr instanceof LiteralExpr:
                 return expr.value
+            case expr instanceof VariableExpr:
+                return this.environment.get(expr.name)
+            case expr instanceof AssignExpr:
+                const value = this.evaluate(expr.value)
+                this.environment.assign(expr.name, value)
+                return value
             default:
-                throw new Error("Invalid expression.")
+                throw new SyntaxError("Invalid expression.")
         }
     }
 
-    private static evaluateUnaryExpr(expr: UnaryExpr) {
+    private evaluateUnaryExpr(expr: UnaryExpr) {
         switch (expr.operator.type) {
             case TokenType.MINUS:
                 const right: any = this.evaluate(expr.right)
@@ -52,7 +82,7 @@ class Interpreter {
         return null
     }
 
-    private static evaluateBinaryExpr(expr: BinaryExpr) {
+    private evaluateBinaryExpr(expr: BinaryExpr) {
         const left:any = this.evaluate(expr.left)
         const right:any = this.evaluate(expr.right)
 
@@ -98,23 +128,23 @@ class Interpreter {
         return null
     }
 
-    private static stringify(value: any) {
+    private stringify(value: any) {
         if (value === null) return "nil"
         return String(value)
     }
 
-    private static isTruthy(expr: Expr): boolean {
+    private isTruthy(expr: Expr): boolean {
         if (expr === null) return false
         else if (typeof expr === "boolean") return expr
         else return true
     }
 
-    private static isNumberOperand(operator: Token, right: any) {
+    private isNumberOperand(operator: Token, right: any) {
         if (typeof right === "number") return;
         throw new RuntimeError("Operand must be a number", operator)
     }
 
-    private static isNumberOperands(operator: Token, left: any, right: any) {
+    private isNumberOperands(operator: Token, left: any, right: any) {
         if (typeof left === "number" && typeof right === "number") return;
         throw new RuntimeError("Operands must both be numbers", operator)
     }

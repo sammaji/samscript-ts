@@ -13,21 +13,36 @@ public class GenerateAst {
             System.err.println("Usage: generate_ast <output directory>");
             System.exit(64);
         }
-        defineAst(args[0], "Expr", Arrays.asList(
+        defineAst("parser/expr.ts", "Expr", Arrays.asList(
+                "AssignExpr -> name: Token, value: Expr",
                 "BinaryExpr -> left: Expr, operator: Token, right: Expr",
                 "GroupingExpr -> expr: Expr",
                 "LiteralExpr -> value: any",
-                "UnaryExpr -> operator: Token, right: Expr"
-                ));
+                "UnaryExpr -> operator: Token, right: Expr",
+                "VariableExpr -> name: Token"), Arrays.asList());
+
+        defineAst("parser/stmt.ts", "Stmt",
+            Arrays.asList(
+                "BlockStmt -> stmts: Stmt[]",
+                "ExprStmt -> expr: Expr",
+                "PrintStmt -> expr: Expr",
+                "VarDecl -> name: Token, initializer: Expr|null"
+                ), 
+                Arrays.asList("import { Expr } from \"./expr\""));
     }
 
     private static void defineAst(
-            String filename, String basename, List<String> types)
+            String filename, String basename, List<String> types, List<String> startingLines)
             throws IOException {
         String cwd = Paths.get("").toAbsolutePath().toString();
         String path = Path.of(cwd, "src", filename).toString();
         PrintWriter writer = new PrintWriter(path, "UTF-8");
         writer.println("import { type Token } from \"@/lex\";");
+        if (startingLines.size() > 0) {
+            for (String line : startingLines) {
+                writer.println(line);
+            }
+        }
         writer.println();
         writer.printf("export class %s {};", basename);
         writer.println();

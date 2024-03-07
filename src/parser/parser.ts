@@ -1,5 +1,5 @@
 import { type Token, TokenType } from "@/lex";
-import { AssignExpr, BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr } from "./expr";
+import { AssignExpr, BinaryExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr } from "./expr";
 import { BlockStmt, ExprStmt, IfStmt, PrintStmt, Stmt, VarDecl } from ".";
 import { Error, ErrorParser, SyntaxError } from "@/error";
 
@@ -78,17 +78,37 @@ class Parser {
     }
 
     private assignment(): Expr {
-        const expr = this.equality()
+        const expr = this.logicalOr()
         if (this.match(TokenType.EQ)) {
             const equals = this.previous()
             const value = this.assignment();
             
             if (expr instanceof VariableExpr) {
-                const e = new AssignExpr(expr.name, value)
-                // console.log(e)
-                return e
+                return new AssignExpr(expr.name, value)
             }
             new SyntaxError("Invalid assignment", equals)
+        }
+
+        return expr
+    }
+
+    private logicalOr() {
+        let expr = this.logicalAnd()
+        while(this.match(TokenType.OR)) {
+            const operator = this.previous()
+            const right = this.logicalAnd()
+            expr = new LogicalExpr(expr, operator, right)
+        }
+        return expr
+    }
+
+    private logicalAnd() {
+        let expr = this.equality()
+
+        while(this.match(TokenType.AND)) {
+            const operator = this.previous()
+            const right = this.equality()
+            expr = new LogicalExpr(expr, operator, right)
         }
 
         return expr
@@ -166,7 +186,7 @@ class Parser {
         throw new SyntaxError("Syntax error, unexpected token", this.peek())
     }
 
-    private declaration() {
+    private declaration(): Stmt | undefined {
         try {
             if (this.match(TokenType.VAR)) return this.varDeclaration()
             return this.statement()
@@ -191,10 +211,10 @@ class Parser {
         return new VarDecl(name, initializer)
     }
 
-    private statement() {
+    private statement(): Stmt {
         if (this.match(TokenType.PRINT)) return this.printStatement()
         if (this.match(TokenType.LBRACE)) return new BlockStmt(this.blockStatement())
-        // if (this.match(TokenType.IF)) return this.ifStatement()
+        if (this.match(TokenType.IF)) return this.ifStatement()
         return this.expressionStatement()
     }
 
@@ -208,10 +228,18 @@ class Parser {
         return stmts
     }
 
-    // private ifStatement() {
-    //     this.consume(TokenType.LPAREN, )
-    //     const block: Stmt[] = []
-    // }
+    private ifStatement() {
+        this.consume(TokenType.LPAREN, "Expected '(' in if-statement")
+        const condition = this.expression()
+        this.consume(TokenType.RPAREN, "Expected ')' in if-statement")
+        
+        const thenBranch = this.statement();
+        if (this.match(TokenType.ELSE)) {
+            const elseBranch = this.statement();
+            return new IfStmt(condition, thenBranch, elseBranch);
+        }
+        return new IfStmt(condition, thenBranch);
+    }
 
     private printStatement() {
         const expr = this.expression()

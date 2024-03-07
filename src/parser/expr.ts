@@ -40,6 +40,18 @@ export class LiteralExpr extends Expr {
 	}
 };
 
+export class LogicalExpr extends Expr {
+	left: Expr;
+	operator: Token;
+	right: Expr;
+	constructor(left: Expr, operator: Token, right: Expr) {
+		super();
+		this.left = left;
+		this.operator = operator;
+		this.right = right;
+	}
+};
+
 export class UnaryExpr extends Expr {
 	operator: Token;
 	right: Expr;

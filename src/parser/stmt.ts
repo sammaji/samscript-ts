@@ -29,11 +29,13 @@ export class PrintStmt extends Stmt {
 
 export class IfStmt extends Stmt {
 	condition: Expr;
-	block: Stmt[];
-	constructor(condition: Expr, block: Stmt[]) {
+	thenBranch: Stmt;
+	elseBranch?: Stmt;
+	constructor(condition: Expr, thenBranch: Stmt, elseBranch?: Stmt) {
 		super();
 		this.condition = condition;
-		this.block = block;
+		this.thenBranch = thenBranch;
+		this.elseBranch = elseBranch;
 	}
 };
 

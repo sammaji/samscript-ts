@@ -18,6 +18,7 @@ public class GenerateAst {
                 "BinaryExpr -> left: Expr, operator: Token, right: Expr",
                 "GroupingExpr -> expr: Expr",
                 "LiteralExpr -> value: any",
+                "LogicalExpr -> left: Expr, operator: Token, right: Expr",
                 "UnaryExpr -> operator: Token, right: Expr",
                 "VariableExpr -> name: Token"), Arrays.asList());
 
@@ -26,7 +27,7 @@ public class GenerateAst {
                 "BlockStmt -> stmts: Stmt[]",
                 "ExprStmt -> expr: Expr",
                 "PrintStmt -> expr: Expr",
-                "IfStmt -> condition: Expr, block: Stmt[]",
+                "IfStmt -> condition: Expr, thenBranch: Stmt, elseBranch?: Stmt",
                 "VarDecl -> name: Token, initializer: Expr|null"
                 ), 
                 Arrays.asList("import { Expr } from \"./expr\""));
@@ -77,7 +78,7 @@ public class GenerateAst {
         // Store parameters in fields.
         for (String field : fields) {
             String name = field.split(":")[0].trim();
-            writer.printf("\t\tthis.%s = %s;", name, name);
+            writer.printf("\t\tthis.%s = %s;", name.replace("?", ""), name.replace("?", ""));
             writer.println();
         }
         writer.println("\t}");

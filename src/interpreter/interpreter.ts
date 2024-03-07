@@ -1,6 +1,6 @@
 import { Environment } from "@/environment";
 import { Token, TokenType } from "@/lex";
-import { AssignExpr, BinaryExpr, BlockStmt, Expr, ExprStmt, GroupingExpr, LiteralExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr } from "@/parser";
+import { AssignExpr, BinaryExpr, BlockStmt, Expr, ExprStmt, GroupingExpr, IfStmt, LiteralExpr, LogicalExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr } from "@/parser";
 import { RuntimeError } from "@/error";
 
 class Interpreter {
@@ -23,10 +23,19 @@ class Interpreter {
             case stmt instanceof BlockStmt:
                 this.evaluateBlockStmt(stmt.stmts, new Environment(this.environment))
                 return
+            case stmt instanceof IfStmt:
+                this.evaluateIfStmt(stmt.condition, stmt.thenBranch, stmt.elseBranch)
+                return
             case stmt instanceof ExprStmt:
                 this.evaluate(stmt.expr)
                 return
         }
+    }
+
+    private evaluateIfStmt(expr: Expr, thenBranch: Stmt, elseBranch?: Stmt) {
+        const condition = this.isTruthy(this.evaluate(expr))
+        if (condition) this.readStmt(thenBranch)
+        else if (elseBranch !== undefined) this.readStmt(elseBranch)
     }
 
     private evaluateVarDecl(stmt: VarDecl) {
@@ -51,7 +60,6 @@ class Interpreter {
     }
 
     private evaluate(expr: Expr): any {
-        // console.log(expr)
         switch (true) {
             case expr instanceof GroupingExpr:
                 return this.evaluate(expr.expr)
@@ -59,14 +67,16 @@ class Interpreter {
                 return this.evaluateUnaryExpr(expr)
             case expr instanceof BinaryExpr:
                 return this.evaluateBinaryExpr(expr)
-            case expr instanceof LiteralExpr:
-                return expr.value
+            case expr instanceof LogicalExpr:
+                return this.evaluateLogicalExpr(expr)
             case expr instanceof VariableExpr:
                 return this.environment.get(expr.name)
             case expr instanceof AssignExpr:
                 const value = this.evaluate(expr.value)
                 this.environment.assign(expr.name, value)
                 return value
+            case expr instanceof LiteralExpr:
+                return expr.value
             default:
                 throw new SyntaxError("Invalid expression.")
         }
@@ -79,7 +89,7 @@ class Interpreter {
                 this.isNumberOperand(expr.operator, right)
                 return right * -1
             case TokenType.NOT:
-                return !this.isTruthy(expr.right) // TODO
+                return !this.isTruthy(this.evaluate(expr.right))
         }
 
         return null
@@ -129,6 +139,21 @@ class Interpreter {
         }
 
         return null
+    }
+
+    private evaluateLogicalExpr(expr: BinaryExpr) {
+        const left = this.isTruthy(this.evaluate(expr.left))
+        
+        if ((expr.operator.type === TokenType.OR && left) || (expr.operator.type === TokenType.AND && !left)) {
+            return left
+        }
+
+        const right = this.isTruthy(this.evaluate(expr.right))
+        if (expr.operator.type === TokenType.OR) {
+            return left || right
+        }
+        
+        return left && right
     }
 
     private stringify(value: any) {

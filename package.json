@@ -6,13 +6,9 @@
   "scripts": {
     "ast": "java ast/GenerateAst.java expr.ts",
     "build": "esbuild src/index.ts --outdir=dist --sourcemap --bundle --minify-whitespace --minify-identifiers --minify-syntax --platform=node --target=node20.10.0",
+    "start": "node dist/index.js",
     "clean": "rimraf dist",
-    "compile": "tsc",
-    "compile-watch": "tsc -w",
-    "dev": "nodemon --watch src/* ts,json --exec 'pnpm build && pnpm start'",
-    "format": "prettier . --write",
-    "format-check": "prettier . --check",
-    "start": "node --enable-source-maps ./dist/index.js"
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "keywords": [],
   "author": "",

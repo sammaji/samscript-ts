@@ -1,0 +1,8 @@
+var a = "global scope";
+
+{
+    var a = "local scope";
+    print a;
+}
+
+print a;

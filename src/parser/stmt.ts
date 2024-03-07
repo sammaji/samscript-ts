@@ -39,6 +39,30 @@ export class IfStmt extends Stmt {
 	}
 };
 
+export class WhileStmt extends Stmt {
+	condition: Expr;
+	body: Stmt;
+	constructor(condition: Expr, body: Stmt) {
+		super();
+		this.condition = condition;
+		this.body = body;
+	}
+};
+
+export class ForStmt extends Stmt {
+	body: Stmt;
+	initializer?: VarDecl | ExprStmt;
+	condition?: Expr;
+	update?: Expr;
+	constructor(body: Stmt, initializer?: VarDecl | ExprStmt, condition?: Expr, update?: Expr) {
+		super();
+		this.body = body;
+		this.initializer = initializer;
+		this.condition = condition;
+		this.update = update;
+	}
+};
+
 export class VarDecl extends Stmt {
 	name: Token;
 	initializer: Expr|null;

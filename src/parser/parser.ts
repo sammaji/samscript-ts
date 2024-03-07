@@ -1,6 +1,6 @@
 import { type Token, TokenType } from "@/lex";
 import { AssignExpr, BinaryExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr } from "./expr";
-import { BlockStmt, ExprStmt, IfStmt, PrintStmt, Stmt, VarDecl } from ".";
+import { BlockStmt, ExprStmt, ForStmt, IfStmt, PrintStmt, Stmt, VarDecl, WhileStmt } from ".";
 import { Error, ErrorParser, SyntaxError } from "@/error";
 
 class Parser {
@@ -128,13 +128,11 @@ class Parser {
 
     private comparison(): Expr {
         let expr = this.term()
-
         while (this.match(TokenType.GT, TokenType.GTE, TokenType.LT, TokenType.LTE)) {
             const operator = this.previous()
             const right = this.term()
             expr = new BinaryExpr(expr, operator, right)
         }
-
         return expr
     }
 
@@ -215,6 +213,8 @@ class Parser {
         if (this.match(TokenType.PRINT)) return this.printStatement()
         if (this.match(TokenType.LBRACE)) return new BlockStmt(this.blockStatement())
         if (this.match(TokenType.IF)) return this.ifStatement()
+        if (this.match(TokenType.WHILE)) return this.whileStatement()
+        if (this.match(TokenType.FOR)) return this.forStatement()
         return this.expressionStatement()
     }
 
@@ -228,10 +228,42 @@ class Parser {
         return stmts
     }
 
-    private ifStatement() {
-        this.consume(TokenType.LPAREN, "Expected '(' in if-statement")
+    private whileStatement() {
+        this.consume(TokenType.LPAREN, "Expected '(' after while")
         const condition = this.expression()
-        this.consume(TokenType.RPAREN, "Expected ')' in if-statement")
+        this.consume(TokenType.RPAREN, "Expected ')' after condition in while statement")
+        const body = this.statement()
+        return new WhileStmt(condition, body);
+    }
+
+    private forStatement() {
+        this.consume(TokenType.LPAREN, "Expected '(' after for")
+
+        let initializer: VarDecl | ExprStmt | undefined;
+        if (this.match(TokenType.VAR)) initializer = this.varDeclaration()
+        else if (this.match(TokenType.SEMI)) initializer = undefined
+        else initializer = this.expressionStatement()
+        
+        let condition: Expr | undefined;
+        if (!this.check(TokenType.SEMI)) {
+            condition = this.expression()
+        }
+        this.consume(TokenType.SEMI, "Expected ';' after loop condition")
+
+                
+        let update: Expr | undefined;
+        if (!this.check(TokenType.RPAREN)) {
+            update = this.expression()
+        }
+        this.consume(TokenType.RPAREN, "Expected ')' after for clause")
+        const body = this.statement()
+        return new ForStmt(body, initializer, condition, update)
+    }
+
+    private ifStatement() {
+        this.consume(TokenType.LPAREN, "Expected '(' after if")
+        const condition = this.expression()
+        this.consume(TokenType.RPAREN, "Expected ')' after condition in if statement")
         
         const thenBranch = this.statement();
         if (this.match(TokenType.ELSE)) {

@@ -1,6 +1,6 @@
 import { Environment } from "@/environment";
 import { Token, TokenType } from "@/lex";
-import { AssignExpr, BinaryExpr, BlockStmt, Expr, ExprStmt, GroupingExpr, IfStmt, LiteralExpr, LogicalExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr } from "@/parser";
+import { AssignExpr, BinaryExpr, BlockStmt, Expr, ExprStmt, ForStmt, GroupingExpr, IfStmt, LiteralExpr, LogicalExpr, PrintStmt, Stmt, UnaryExpr, VarDecl, VariableExpr, WhileStmt } from "@/parser";
 import { RuntimeError } from "@/error";
 
 class Interpreter {
@@ -26,9 +26,32 @@ class Interpreter {
             case stmt instanceof IfStmt:
                 this.evaluateIfStmt(stmt.condition, stmt.thenBranch, stmt.elseBranch)
                 return
+            case stmt instanceof WhileStmt:
+                this.evaluateWhileStmt(stmt.condition, stmt.body)
+                return
+            case stmt instanceof ForStmt:
+                this.evaluateForStmt(stmt.body, stmt.initializer, stmt.condition, stmt.update)
+                return
             case stmt instanceof ExprStmt:
                 this.evaluate(stmt.expr)
                 return
+        }
+    }
+
+    private evaluateForStmt(body: Stmt, initializer?: Expr | VarDecl, condition?: Expr, update?: Expr) {
+        if (initializer) {
+            this.readStmt(initializer)
+        }
+
+        while (condition ? this.isTruthy(this.evaluate(condition)) : true) {
+            this.readStmt(body);
+            if (update) this.evaluate(update)
+        }
+    }
+
+    private evaluateWhileStmt(expr: Expr, body: Stmt): void {
+        while (this.isTruthy(this.evaluate(expr))) {
+            this.readStmt(body)
         }
     }
 

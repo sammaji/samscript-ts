@@ -28,6 +28,8 @@ public class GenerateAst {
                 "ExprStmt -> expr: Expr",
                 "PrintStmt -> expr: Expr",
                 "IfStmt -> condition: Expr, thenBranch: Stmt, elseBranch?: Stmt",
+                "WhileStmt -> condition: Expr, body: Stmt",
+                "ForStmt -> body: Stmt, initializer?: VarDecl | ExprStmt, condition?: Expr, update?: Expr",
                 "VarDecl -> name: Token, initializer: Expr|null"
                 ), 
                 Arrays.asList("import { Expr } from \"./expr\""));

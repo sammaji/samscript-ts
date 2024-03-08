@@ -1,7 +1,7 @@
 import keywords from "./keywords";
-import Smi from "@/samscript";
 import TokenType from "./tokens";
 import { isAlpha, isAlphaNumeric, isDigit } from "@/util";
+import { Error } from "@/error";
 
 export type Token = {
   type: TokenType;
@@ -52,8 +52,7 @@ class Scanner {
     }
 
     if (this.isEof()) {
-      Smi.errorAtLine(this.line, "Unterminated string.");
-      return;
+      throw new Error(`Unterminated string at line ${this.line}`);
     }
 
     this.advance();
@@ -178,7 +177,7 @@ class Scanner {
       default:
         if (isDigit(c)) this.number();
         else if (isAlpha(c)) this.identifier();
-        else Smi.errorAtLine(this.line, `unexpected token: ${c}`);
+        else new Error(`Unexpected token ${c} at line ${this.line}`)
     }
   }
 }

@@ -308,7 +308,7 @@ class Parser {
 
   private expressionStatement() {
     const expr = this.expression();
-    this.consume(TokenType.SEMI, "Expected ';'");
+    this.consume(TokenType.SEMI, "Unexpected token.");
     return new ExprStmt(expr);
   }
 
